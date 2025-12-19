@@ -46,12 +46,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 15px;
+            gap: 7px;
             margin-bottom: 10px;
         }
 
-        .logo i {
-            font-size: 40px;
+        .logo img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
         }
 
         h1 {
@@ -361,6 +363,104 @@
             margin-bottom: 20px;
             opacity: 0.5;
         }
+
+        /* CCTV Preview Section */
+        .cctv-preview-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .cctv-preview-section h2 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .cctv-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            width: 100%;
+        }
+
+        .cctv-video-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            height: 0;
+            overflow: hidden;
+            border-radius: 8px;
+            background: #000;
+        }
+
+        .cctv-video-container video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .cctv-placeholder {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 18px;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .cctv-placeholder i {
+            font-size: 60px;
+            opacity: 0.7;
+        }
+
+        .cctv-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .cctv-controls button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            background: var(--primary);
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .cctv-controls button:hover {
+            background: var(--primary-dark);
+        }
+
+        @media (max-width: 768px) {
+            .cctv-preview-section {
+                padding: 20px;
+            }
+
+            .cctv-placeholder {
+                font-size: 16px;
+            }
+
+            .cctv-placeholder i {
+                font-size: 40px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -368,11 +468,28 @@
         <!-- Header -->
         <header>
             <div class="logo">
-                <i class="fas fa-search"></i>
+                <img src="./assets/Logo.png" alt="DRISTI Logo">
                 <h1>DRISTI</h1>
             </div>
             <p class="tagline">Lost Person Detection System</p>
         </header>
+
+        <!-- CCTV Preview Section -->
+        <div class="cctv-preview-section">
+            <h2><i class="fas fa-video"></i> CCTV Footage Preview</h2>
+            <p style="color: var(--gray); margin-bottom: 20px;">
+                Watch CCTV footage preview from all cameras. The footage plays on loop.
+            </p>
+            <div class="cctv-grid" id="cctvContainer"></div>
+            <div class="cctv-controls">
+                <button onclick="toggleCCTVPlayback()">
+                    <i class="fas fa-play"></i> Play All
+                </button>
+                <button onclick="pauseCCTVPlayback()">
+                    <i class="fas fa-pause"></i> Pause All
+                </button>
+            </div>
+        </div>
 
         <!-- Upload Card -->
         <div class="card">
@@ -468,6 +585,73 @@
         const loadingSection = document.getElementById('loadingSection');
         const resultsSection = document.getElementById('resultsSection');
         let selectedFile = null;
+
+        // CCTV Preview Variables
+        let cctvVideos = [
+            'https://res.cloudinary.com/dzsodqdi4/video/upload/v1766172774/cctv1_rir0ud.mp4',
+            'https://res.cloudinary.com/dzsodqdi4/video/upload/v1766172774/cctv2_n7wcvd.mp4',
+            'https://res.cloudinary.com/dzsodqdi4/video/upload/v1766172773/cctv3_nl6z5p.mp4',
+            'https://res.cloudinary.com/dzsodqdi4/video/upload/v1766172773/cctv4_tcxawb.mp4'
+        ];
+        let videoElements = [];
+        let cctvPlaying = false;
+
+        // Initialize CCTV preview
+        function initializeCCTVPreview() {
+            loadCCTVFeedList();
+        }
+
+        function loadCCTVFeedList() {
+            const container = document.getElementById('cctvContainer');
+            
+            // Check if videos already loaded
+            if (container.children.length > 0) return;
+
+            // Create video container for each video
+            cctvVideos.forEach((videoUrl, index) => {
+                const videoContainer = document.createElement('div');
+                videoContainer.className = 'cctv-video-container';
+                
+                const videoElement = document.createElement('video');
+                videoElement.muted = true;
+                videoElement.autoplay = true;
+                videoElement.loop = true;
+                videoElement.src = videoUrl;
+                videoElement.style.objectFit = 'contain';
+                
+                videoContainer.appendChild(videoElement);
+                container.appendChild(videoContainer);
+                videoElements.push(videoElement);
+
+                // Handle errors
+                videoElement.addEventListener('error', (e) => {
+                    console.log('Error loading video ' + (index + 1) + ':', e);
+                });
+            });
+
+            cctvPlaying = true;
+        }
+
+        function toggleCCTVPlayback() {
+            if (videoElements.length === 0) return;
+
+            if (cctvPlaying) {
+                videoElements.forEach(video => video.pause());
+                cctvPlaying = false;
+            } else {
+                videoElements.forEach(video => {
+                    video.play().catch(e => {
+                        console.log('Could not autoplay video:', e);
+                    });
+                });
+                cctvPlaying = true;
+            }
+        }
+
+        function pauseCCTVPlayback() {
+            videoElements.forEach(video => video.pause());
+            cctvPlaying = false;
+        }
 
         // Upload area click
         uploadArea.addEventListener('click', () => photoInput.click());
@@ -608,22 +792,25 @@
                 return;
             }
 
-            const matches = results.matches || [];
+            let matches = results.matches || [];
 
-            if (matches.length === 0) {
+            // Limit to top 20 results
+            const topMatches = matches.slice(0, 20);
+
+            if (topMatches.length === 0) {
                 noResultsDiv.style.display = 'block';
                 summaryDiv.style.display = 'none';
                 return;
             }
 
-            // Show summary
+            // Show summary with total matches info
             summaryDiv.style.display = 'block';
-            document.getElementById('totalMatches').textContent = matches.length;
-            document.getElementById('bestConfidence').textContent = matches[0].confidence.toFixed(1) + '%';
-            document.getElementById('camerasCount').textContent = new Set(matches.map(m => m.camera)).size;
+            document.getElementById('totalMatches').textContent = topMatches.length + (matches.length > 20 ? ` of ${matches.length}` : '');
+            document.getElementById('bestConfidence').textContent = topMatches[0].confidence.toFixed(1) + '%';
+            document.getElementById('camerasCount').textContent = new Set(topMatches.map(m => m.camera)).size;
 
-            // Display matches
-            matches.forEach((match, index) => {
+            // Display top 20 matches
+            topMatches.forEach((match, index) => {
                 const card = document.createElement('div');
                 card.className = 'match-card';
                 card.innerHTML = `
@@ -662,6 +849,9 @@
             document.getElementById('matchesContainer').innerHTML = '';
             previewSection.classList.add('show');
         }
+
+        // Initialize CCTV preview on page load
+        window.addEventListener('load', initializeCCTVPreview);
     </script>
 </body>
 </html>
