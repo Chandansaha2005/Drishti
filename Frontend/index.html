@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DRISTI - Lost Person Detection</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --gray: #6b7280;
+            --light: #f9fafb;
+            --border: #e5e7eb;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .logo i {
+            font-size: 40px;
+        }
+
+        h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        .tagline {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        /* Card */
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card h2 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        /* Upload Area */
+        .upload-area {
+            border: 3px dashed var(--primary);
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--light);
+        }
+
+        .upload-area:hover {
+            background: #f0f4ff;
+            border-color: var(--primary-dark);
+        }
+
+        .upload-area.dragover {
+            background: #e0e7ff;
+            border-color: var(--primary-dark);
+        }
+
+        .upload-icon {
+            font-size: 50px;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .upload-area p {
+            color: var(--gray);
+            margin: 10px 0;
+        }
+
+        .upload-area .hint {
+            font-size: 14px;
+            color: #9ca3af;
+        }
+
+        #photoInput {
+            display: none;
+        }
+
+        /* Preview */
+        .preview-section {
+            display: none;
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid var(--border);
+        }
+
+        .preview-section.show {
+            display: block;
+        }
+
+        .preview-image {
+            max-width: 300px;
+            height: auto;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        /* Buttons */
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-primary:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: var(--gray);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
+        /* Loading */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid var(--light);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Results */
+        .results-section {
+            display: none;
+        }
+
+        .results-section.show {
+            display: block;
+        }
+
+        .summary {
+            background: #f0fdf4;
+            border-left: 4px solid var(--success);
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .summary h3 {
+            color: var(--success);
+            margin-bottom: 10px;
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--gray);
+            margin-top: 5px;
+        }
+
+        .error {
+            background: #fef2f2;
+            border-left: 4px solid var(--danger);
+            padding: 20px;
+            border-radius: 6px;
+            color: var(--danger);
+            margin-bottom: 20px;
+        }
+
+        /* Match Cards */
+        .matches-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .match-card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .match-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .match-image {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            background: var(--light);
+        }
+
+        .match-info {
+            padding: 15px;
+        }
+
+        .match-camera {
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .match-confidence {
+            display: inline-block;
+            background: var(--success);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .match-time {
+            font-size: 14px;
+            color: var(--gray);
+            margin-bottom: 5px;
+        }
+
+        .match-frame {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 28px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .upload-area {
+                padding: 30px 20px;
+            }
+
+            .matches-container {
+                grid-template-columns: 1fr;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--gray);
+        }
+
+        .no-results i {
+            font-size: 50px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="logo">
+                <i class="fas fa-search"></i>
+                <h1>DRISTI</h1>
+            </div>
+            <p class="tagline">Lost Person Detection System</p>
+        </header>
+
+        <!-- Upload Card -->
+        <div class="card">
+            <h2><i class="fas fa-image"></i> Upload Lost Person Photo</h2>
+            <p style="color: var(--gray); margin-bottom: 20px;">
+                Upload a photo of the lost person. Our system will search through CCTV footage from all cameras.
+            </p>
+
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <p><strong>Click to upload or drag and drop</strong></p>
+                <p class="hint">JPG, PNG (Max 10MB)</p>
+            </div>
+
+            <input type="file" id="photoInput" accept="image/*" />
+
+            <!-- Preview Section -->
+            <div class="preview-section" id="previewSection">
+                <h3>Selected Photo</h3>
+                <img id="previewImage" class="preview-image" alt="Preview">
+                <div class="button-group">
+                    <button class="btn-primary" id="searchBtn" onclick="startSearch()">
+                        <i class="fas fa-search"></i> Search CCTV Footage
+                    </button>
+                    <button class="btn-secondary" id="clearBtn" onclick="clearUpload()">
+                        <i class="fas fa-times"></i> Clear
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading Section -->
+            <div class="loading" id="loadingSection">
+                <div class="spinner"></div>
+                <p><strong>Searching CCTV footage...</strong></p>
+                <p style="color: var(--gray); font-size: 14px; margin-top: 10px;">
+                    This may take a few moments depending on video length
+                </p>
+            </div>
+        </div>
+
+        <!-- Results Card -->
+        <div class="card results-section" id="resultsSection">
+            <h2><i class="fas fa-check-circle"></i> Search Results</h2>
+
+            <!-- Summary -->
+            <div class="summary" id="summaryDiv" style="display: none;">
+                <h3>Search Complete</h3>
+                <div class="summary-stats">
+                    <div class="stat">
+                        <div class="stat-value" id="totalMatches">0</div>
+                        <div class="stat-label">Matches Found</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="bestConfidence">0%</div>
+                        <div class="stat-label">Best Match</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="camerasCount">0</div>
+                        <div class="stat-label">Cameras</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error -->
+            <div class="error" id="errorDiv" style="display: none;"></div>
+
+            <!-- No Results -->
+            <div class="no-results" id="noResultsDiv" style="display: none;">
+                <i class="fas fa-search"></i>
+                <h3>No Matches Found</h3>
+                <p>The person was not detected in any of the camera footage.</p>
+            </div>
+
+            <!-- Matches -->
+            <div class="matches-container" id="matchesContainer"></div>
+
+            <!-- New Search Button -->
+            <div style="margin-top: 30px; padding-top: 30px; border-top: 1px solid var(--border);">
+                <button class="btn-secondary" onclick="newSearch()" style="width: 100%;">
+                    <i class="fas fa-plus"></i> Start New Search
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const photoInput = document.getElementById('photoInput');
+        const previewSection = document.getElementById('previewSection');
+        const previewImage = document.getElementById('previewImage');
+        const loadingSection = document.getElementById('loadingSection');
+        const resultsSection = document.getElementById('resultsSection');
+        let selectedFile = null;
+
+        // Upload area click
+        uploadArea.addEventListener('click', () => photoInput.click());
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileSelect(files[0]);
+            }
+        });
+
+        // File input change
+        photoInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileSelect(e.target.files[0]);
+            }
+        });
+
+        function handleFileSelect(file) {
+            // Validate file
+            if (!file.type.startsWith('image/')) {
+                alert('Please select an image file');
+                return;
+            }
+
+            if (file.size > 10 * 1024 * 1024) {
+                alert('File size must be less than 10MB');
+                return;
+            }
+
+            selectedFile = file;
+
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImage.src = e.target.result;
+                previewSection.classList.add('show');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function startSearch() {
+            if (!selectedFile) {
+                alert('Please select a photo first');
+                return;
+            }
+
+            try {
+                // Show loading
+                previewSection.classList.remove('show');
+                loadingSection.classList.add('show');
+                resultsSection.classList.remove('show');
+
+                // Prepare form data
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+
+                // Send request
+                const response = await fetch('/api/search', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    showError(data.message || 'Search failed');
+                    loadingSection.classList.remove('show');
+                    return;
+                }
+
+                const searchId = data.search_id;
+
+                // Poll for results
+                const maxAttempts = 120; // 2 minutes with 1 second intervals
+                let attempts = 0;
+
+                const pollResults = async () => {
+                    try {
+                        const resultsResponse = await fetch(`/api/search-results/${searchId}`);
+                        const resultsData = await resultsResponse.json();
+
+                        if (resultsResponse.ok && resultsData.results) {
+                            loadingSection.classList.remove('show');
+                            displayResults(resultsData.results);
+                            resultsSection.classList.add('show');
+                        } else if (attempts < maxAttempts) {
+                            attempts++;
+                            setTimeout(pollResults, 1000);
+                        } else {
+                            showError('Search timeout. Please try again.');
+                            loadingSection.classList.remove('show');
+                        }
+                    } catch (error) {
+                        if (attempts < maxAttempts) {
+                            attempts++;
+                            setTimeout(pollResults, 1000);
+                        } else {
+                            showError('Error retrieving results: ' + error.message);
+                            loadingSection.classList.remove('show');
+                        }
+                    }
+                };
+
+                pollResults();
+
+            } catch (error) {
+                showError('Error: ' + error.message);
+                loadingSection.classList.remove('show');
+            }
+        }
+
+        function displayResults(results) {
+            const errorDiv = document.getElementById('errorDiv');
+            const noResultsDiv = document.getElementById('noResultsDiv');
+            const summaryDiv = document.getElementById('summaryDiv');
+            const matchesContainer = document.getElementById('matchesContainer');
+
+            errorDiv.style.display = 'none';
+            noResultsDiv.style.display = 'none';
+            matchesContainer.innerHTML = '';
+
+            if (results.status === 'error') {
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = results.error || 'Search error';
+                return;
+            }
+
+            const matches = results.matches || [];
+
+            if (matches.length === 0) {
+                noResultsDiv.style.display = 'block';
+                summaryDiv.style.display = 'none';
+                return;
+            }
+
+            // Show summary
+            summaryDiv.style.display = 'block';
+            document.getElementById('totalMatches').textContent = matches.length;
+            document.getElementById('bestConfidence').textContent = matches[0].confidence.toFixed(1) + '%';
+            document.getElementById('camerasCount').textContent = new Set(matches.map(m => m.camera)).size;
+
+            // Display matches
+            matches.forEach((match, index) => {
+                const card = document.createElement('div');
+                card.className = 'match-card';
+                card.innerHTML = `
+                    <img src="/api/snapshot/${match.snapshot}" class="match-image" alt="Match snapshot" onerror="this.style.opacity='0.3'">
+                    <div class="match-info">
+                        <div class="match-camera"><i class="fas fa-camera"></i> ${match.camera_name}</div>
+                        <div class="match-confidence">${match.confidence.toFixed(1)}% Match</div>
+                        <div class="match-time"><i class="fas fa-clock"></i> ${match.time_formatted}</div>
+                        <div class="match-frame">Frame: ${match.frame_number}</div>
+                    </div>
+                `;
+                matchesContainer.appendChild(card);
+            });
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorDiv');
+            errorDiv.style.display = 'block';
+            errorDiv.textContent = message;
+            resultsSection.classList.add('show');
+        }
+
+        function clearUpload() {
+            selectedFile = null;
+            photoInput.value = '';
+            previewSection.classList.remove('show');
+            previewImage.src = '';
+        }
+
+        function newSearch() {
+            clearUpload();
+            resultsSection.classList.remove('show');
+            document.getElementById('errorDiv').style.display = 'none';
+            document.getElementById('noResultsDiv').style.display = 'none';
+            document.getElementById('summaryDiv').style.display = 'none';
+            document.getElementById('matchesContainer').innerHTML = '';
+            previewSection.classList.add('show');
+        }
+    </script>
+</body>
+</html>

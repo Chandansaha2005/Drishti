@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Search Jobs</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Search</h1>
+    <nav><a href="index.html">Home</a><a href="dashboard.html">Dashboard</a></nav>
+  </header>
+  <main>
+    <section class="card">
+      <h2>Create search job</h2>
+      <form id="createSearchForm">
+        <div class="form-group"><label for="searchTarget">Target</label><select id="searchTarget" name="target"></select></div>
+        <div class="form-group"><label for="searchCamera">Camera</label><select id="searchCamera" name="camera"><option value="all">All Cameras</option></select></div>
+        <div class="form-group"><label for="startTime">Start</label><input type="datetime-local" id="startTime" name="start_time"></div>
+        <div class="form-group"><label for="endTime">End</label><input type="datetime-local" id="endTime" name="end_time"></div>
+        <div class="form-actions"><button class="btn btn-primary" type="submit">Start Search</button></div>
+      </form>
+    </section>
+    <section class="card">
+      <h2>Active searches</h2>
+      <div id="searchJobs"><p class="small">No active searches</p></div>
+    </section>
+  </main>
+
+  <div id="messageContainer" class="message-container"></div>
+  <script type="module" src="api.js"></script>
+  <script src="script.js"></script>
+  <script>
+    async function refreshTargets() {
+      const res = await API.getTargetPersons();
+      if (res.success && res.data) {
+        const sel = document.getElementById('searchTarget');
+        sel.innerHTML = '<option value="">-- Select target --</option>' + res.data.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+      }
+    }
+    document.getElementById('createSearchForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = {
+        target_id: document.getElementById('searchTarget').value,
+        camera_id: document.getElementById('searchCamera').value,
+        start_time: document.getElementById('startTime').value,
+        end_time: document.getElementById('endTime').value
+      };
+      const res = await API.createSearchJob(fd);
+      if (res.success) {
+        API.showMessage('Search started', 'success');
+        document.getElementById('createSearchForm').reset();
+      } else API.showMessage('Failed: ' + res.error, 'error');
+    });
+    refreshTargets();
+  </script>
+</body>
+</html>

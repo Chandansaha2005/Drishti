@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Dashboard</h1>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="targets.html">Targets</a>
+      <a href="cctv.html">CCTV</a>
+      <a href="search.html">Search</a>
+      <a href="results.html">Results</a>
+    </nav>
+  </header>
+  <main>
+    <section class="card">
+      <h2>System status</h2>
+      <p class="small">API: <span id="apiStatus">checking...</span></p>
+    </section>
+
+    <section class="card stats">
+      <h2>Statistics</h2>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <h3 id="totalSearches">0</h3>
+          <p>Total searches</p>
+        </div>
+        <div class="stat-item">
+          <h3 id="matchesFound">0</h3>
+          <p>Matches found</p>
+        </div>
+        <div class="stat-item">
+          <h3 id="activeJobs">0</h3>
+          <p>Active jobs</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Recent uploads</h2>
+      <div id="recentList"><p class="small">No uploads yet</p></div>
+    </section>
+  </main>
+
+  <div id="messageContainer" class="message-container"></div>
+
+  <script type="module" src="api.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

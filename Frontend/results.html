@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Results</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Results</h1>
+    <nav><a href="index.html">Home</a><a href="dashboard.html">Dashboard</a></nav>
+  </header>
+  <main>
+    <section class="card">
+      <h2>Search results</h2>
+      <div id="resultsContainer"><p class="small">No results yet</p></div>
+    </section>
+  </main>
+
+  <div id="messageContainer" class="message-container"></div>
+  <script type="module" src="api.js"></script>
+  <script src="script.js"></script>
+  <script>
+    async function loadResults() {
+      const res = await API.getSearchJobs();
+      if (res.success && res.data) {
+        const container = document.getElementById('resultsContainer');
+        if (!res.data.length) {
+          container.innerHTML = '<p class="small">No results yet</p>';
+          return;
+        }
+        container.innerHTML = res.data.map(job => `
+          <div class="result-card">
+            <h3>Job #${job.id} - ${job.status}</h3>
+            <p class="small">Target: ${job.target_name || '—'}</p>
+            <p class="small">Matches: ${job.matches || 0}</p>
+            <div class="result-actions">
+              <a href="${API.getResultVideoUrl(job.id)}" target="_blank" class="btn btn-sm">View Video</a>
+              <a href="${API.getResultReportUrl(job.id)}" target="_blank" class="btn btn-sm">Download Report</a>
+            </div>
+          </div>
+        `).join('');
+      } else {
+        API.showMessage('Failed to load results: ' + res.error, 'error');
+      }
+    }
+    loadResults();
+  </script>
+</body>
+</html>

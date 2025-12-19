@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Targets</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Targets</h1>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="dashboard.html">Dashboard</a>
+    </nav>
+  </header>
+  <main>
+    <section class="card">
+      <h2>Add new target</h2>
+      <form id="createTargetForm">
+        <div class="form-group">
+          <label for="targetName">Name</label>
+          <input type="text" id="targetName" name="name" placeholder="Name" required>
+        </div>
+        <div class="form-group">
+          <label for="targetDescription">Description</label>
+          <input type="text" id="targetDescription" name="description" placeholder="Optional description">
+        </div>
+        <div class="form-group">
+          <label for="targetPhoto">Photo</label>
+          <input type="file" id="targetPhoto" name="photo" accept="image/*" required>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Add target</button>
+        </div>
+      </form>
+    </section>
+    <section class="card">
+      <h2>Known targets</h2>
+      <div id="targetsContainer"><p class="small">Loading…</p></div>
+    </section>
+  </main>
+
+  <div id="messageContainer" class="message-container"></div>
+
+  <script type="module" src="api.js"></script>
+  <script src="script.js"></script>
+  <script>
+    // handle create target
+    document.getElementById('createTargetForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const fd = new FormData(form);
+      const submitBtn = form.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Adding...';
+      const res = await API.createTargetPerson(fd);
+      if (res.success) {
+        API.showMessage('Target created', 'success');
+        form.reset();
+        // refresh targets
+        if (typeof loadTargets === 'function') loadTargets();
+      } else {
+        API.showMessage('Failed to create target: ' + res.error, 'error');
+      }
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Add target';
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CCTV</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>CCTV</h1>
+    <nav><a href="index.html">Home</a><a href="dashboard.html">Dashboard</a></nav>
+  </header>
+  <main>
+    <section class="card">
+      <h2>Add CCTV stream</h2>
+      <form id="createCctvForm">
+        <div class="form-group"><label for="cctvName">Name</label><input id="cctvName" name="name" required></div>
+        <div class="form-group"><label for="cctvUrl">Stream URL</label><input id="cctvUrl" name="url" required placeholder="rtsp://..."></div>
+        <div class="form-actions"><button class="btn btn-primary" type="submit">Add CCTV</button></div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Upload CCTV video</h2>
+      <form id="uploadCctvForm">
+        <div class="form-group"><label for="selectCctv">Select CCTV</label><select id="selectCctv" name="cctv"></select></div>
+        <div class="form-group"><label for="cctvVideo">Video file</label><input type="file" id="cctvVideo" name="video" accept="video/*"></div>
+        <div class="form-actions"><button class="btn btn-primary" type="submit">Upload Video</button></div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Registered cameras</h2>
+      <div id="cctvList"><p class="small">No cameras yet</p></div>
+    </section>
+  </main>
+
+  <div id="messageContainer" class="message-container"></div>
+  <script type="module" src="api.js"></script>
+  <script src="script.js"></script>
+  <script>
+    async function refreshCctvList() {
+      const base = API.baseUrl || window.location.origin;
+      const prefix = API.apiVersion || '/api/v1';
+      const res = await API.makeAuthenticatedRequest(base + prefix + '/cctvs');
+      if (res.success) {
+        const list = document.getElementById('cctvList');
+        const sel = document.getElementById('selectCctv');
+        if (res.data.length === 0) {
+          list.innerHTML = '<p class="small">No cameras yet</p>';
+          sel.innerHTML = '<option value="">--</option>';
+          return;
+        }
+        list.innerHTML = res.data.map(c => `<div class="cctv-card"><strong>${c.name}</strong><div class="small">${c.url}</div></div>`).join('');
+        sel.innerHTML = res.data.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+      } else {
+        API.showMessage('Failed to load cameras: ' + res.error, 'error');
+      }
+    }
+
+    document.getElementById('createCctvForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData();
+      fd.append('name', document.getElementById('cctvName').value);
+      fd.append('url', document.getElementById('cctvUrl').value);
+      const res = await API.createCCTV({ name: fd.get('name'), url: fd.get('url') });
+      if (res.success) {
+        API.showMessage('Added CCTV', 'success');
+        refreshCctvList();
+        e.target.reset();
+      } else API.showMessage('Failed: ' + res.error, 'error');
+    });
+
+    document.getElementById('uploadCctvForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const cctvId = document.getElementById('selectCctv').value;
+      const file = document.getElementById('cctvVideo').files[0];
+      if (!cctvId || !file) return API.showMessage('Select camera and video', 'error');
+      const fd = new FormData();
+      fd.append('file', file, file.name);
+      const res = await API.uploadCCTVVideo(cctvId, fd);
+      if (res.success) API.showMessage('Uploaded video', 'success'); else API.showMessage('Failed: ' + res.error, 'error');
+    });
+
+    refreshCctvList();
+  </script>
+</body>
+</html>
