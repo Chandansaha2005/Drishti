@@ -18,7 +18,7 @@ from typing import List, Dict, Any
 import logging
 
 from search_service import SearchService
-
+ 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
