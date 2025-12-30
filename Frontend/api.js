@@ -1,6 +1,6 @@
 // API Configuration (modernized for module use)
 export const API_BASE_URL = 'https://project-drishti.onrender.com';
-export const API_VERSION = '/api/v1';
+export const API_VERSION = '/api';
 
 // Global variables
 let currentUser = null;
@@ -38,7 +38,7 @@ export function validatePassword(password) {
 // Health check against backend root /health
 export async function health() {
     try {
-        const response = await fetch(`${API_BASE_URL}/health`);
+        const response = await fetch(`${API_BASE_URL}${API_VERSION}/health`);
         if (!response.ok) return { status: 'offline' };
         const data = await response.json();
         // Normalize to { status }
@@ -50,33 +50,24 @@ export async function health() {
 }
 
 // Simple upload and recognition helpers aligned with current backend
-export async function uploadFile(file) {
-    const fd = new FormData();
-    fd.append('file', file, file.name);
-    const r = await fetch(`${API_BASE_URL}/upload`, { method: 'POST', body: fd });
-    if (!r.ok) {
-        const err = await r.json().catch(() => ({}));
-        throw new Error(err.detail || 'Upload failed');
-    }
-    return r.json();
-}
+export async function searchLostPerson(file, useCCTV = false) {
+  const fd = new FormData();
+  fd.append("file", file);
 
-export async function encode(filename) {
-    const r = await fetch(`${API_BASE_URL}/encode`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ filename }) });
-    if (!r.ok) {
-        const err = await r.json().catch(() => ({}));
-        throw new Error(err.detail || 'Encode failed');
+  const r = await fetch(
+    `${API_BASE_URL}${API_VERSION}/search?use_cctv=${useCCTV}`,
+    {
+      method: "POST",
+      body: fd
     }
-    return r.json();
-}
+  );
 
-export async function recognize(filename) {
-    const r = await fetch(`${API_BASE_URL}/recognize`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ filename }) });
-    if (!r.ok) {
-        const err = await r.json().catch(() => ({}));
-        throw new Error(err.detail || 'Recognize failed');
-    }
-    return r.json();
+  if (!r.ok) {
+    const text = await r.text();
+    throw new Error(text);
+  }
+
+  return r.json();
 }
 
 // Auth / user management (optional endpoints - keep flexible)
@@ -202,27 +193,13 @@ export async function getTargetPersons() {
 
 // Expose backwards-compatible global
 window.API = {
-    // config
     baseUrl: API_BASE_URL,
     apiVersion: API_VERSION,
-    // helpers
+
     showMessage,
     validateEmail,
     validatePassword,
-    // auth
-    registerUser,
-    loginUser,
-    logout,
-    isLoggedIn,
-    currentUser: currentUserFn,
-    // basic backend helpers
+
     health,
-    uploadFile,
-    encode,
-    recognize,
-    // targets
-    createTargetPerson,
-    getTargetPersons,
-    // generic request
-    makeAuthenticatedRequest,
+    searchLostPerson
 };
