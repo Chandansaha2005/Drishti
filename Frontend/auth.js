@@ -142,7 +142,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     
     // Check backend status
-    const isBackendHealthy = await API.checkBackendStatus();
+    const health = await API.health();
+    const isBackendHealthy = health.status === 'ok';
     const statusElement = document.getElementById('backendStatus');
     
     if (statusElement) {
@@ -152,7 +153,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         } else {
             statusElement.textContent = 'Disconnected';
             statusElement.className = 'status-indicator inactive';
-            API.showMessage('Cannot connect to backend server. Please ensure it is running on http://localhost:8000', 'error', 10000);
+            API.showMessage('Cannot connect to backend server. Please try again later.', 'error', 10000);
         }
     }
     
