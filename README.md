@@ -13,7 +13,7 @@ A comprehensive face recognition system that identifies lost persons in CCTV foo
 - 🌐 **Web Interface** - Intuitive UI for searching lost persons
 
 ## Project Structure
-
+```
 DRISTI/
 ├── src/
 │   ├── backend/
