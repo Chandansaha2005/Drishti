@@ -10,7 +10,7 @@ torchvision
 numpy
 Pillow
 
-mediapipe>
+mediapipe
 
 matplotlib
 python-dotenv
