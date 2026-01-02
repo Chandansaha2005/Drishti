@@ -1,0 +1,20 @@
+{
+  "buildCommand": "echo 'No build required for static frontend'",
+  "public": false,
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, must-revalidate"
+        }
+      ]
+    }
+  ],
+  "env": {
+    "NEXT_PUBLIC_API_BACKEND_URL": "@api_backend_url"
+  }
+}
