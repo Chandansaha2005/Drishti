@@ -123,8 +123,8 @@ All dependencies are in `requirements.txt`:
 
 3. **Add Environment Variables**
    - Click "Add Environment Variable"
-   - Add `DEBUG=False`SECRET_KEY=<your-random-secret-key>
-   - Add ``
+   - Add `DEBUG=False`
+   - Add `SECRET_KEY=<your-random-secret-key>`
    - Do NOT add PORT (Render sets this automatically)
 
 4. **Deploy**
