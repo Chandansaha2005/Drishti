@@ -872,7 +872,10 @@
                 formData.append('file', selectedFile);
 
                 // Send request
-                const response = await fetch('/api/search', {
+                const BACKEND_URL = window.location.hostname === 'localhost' 
+                    ? 'http://localhost:8000'
+                    : 'https://drishti-backend-yh74.onrender.com';
+                const response = await fetch(`${BACKEND_URL}/api/search`, {
                     method: 'POST',
                     body: formData
                 });
@@ -893,7 +896,7 @@
 
                 const pollResults = async () => {
                     try {
-                        const resultsResponse = await fetch(`/api/search-results/${searchId}`);
+                        const resultsResponse = await fetch(`${BACKEND_URL}/api/search-results/${searchId}`);
                         const resultsData = await resultsResponse.json();
 
                         if (resultsResponse.ok && resultsData.results) {
