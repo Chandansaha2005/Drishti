@@ -7,12 +7,12 @@ opencv-python==4.8.1.78
 torch==2.5.1
 torchvision==0.21.0
 
-numpy==1.26.4
-Pillow==10.4.0
+numpy>=1.26.4,<2.0
+Pillow>=10.4.0,<11
 
-mediapipe==0.10.21
-matplotlib==3.8.4
+mediapipe>=0.10.30
 
+matplotlib==3.9.0
 python-dotenv==1.0.0
 aiofiles==23.2.1
 cloudinary==1.36.0
