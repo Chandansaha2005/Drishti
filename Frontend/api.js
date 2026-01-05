@@ -1,7 +1,8 @@
 // API Configuration (modernized for module use)
 export const API_BASE_URL = window.location.hostname === 'localhost' 
     ? 'http://localhost:8000'
-    : 'https://project-drishti.onrender.com';
+    : window.location.origin; // Use current domain on production
+
 export const API_VERSION = '/api';
 
 // Global variables

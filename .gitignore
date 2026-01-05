@@ -189,3 +189,12 @@ models/*
 *.tmp
 *.temp
 *.bak
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+data/
+CCTVS/
+*.log
+.env
+node_modules/

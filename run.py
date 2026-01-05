@@ -1,14 +1,21 @@
-import sys
 import os
-from pathlib import Path
-
-project_root = Path(__file__).parent
-sys.path.insert(0, str(project_root))
-
-from src.backend.app import app
+import sys
 import uvicorn
 
-if __name__ == "__main__":
-    print("Starting Drishti - Lost Person Detection System...")
-    port = int(os.getenv('PORT', 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+# Get port from environment or default to 8000
+PORT = int(os.getenv('PORT', 8000))
+HOST = os.getenv('HOST', '0.0.0.0')
+
+if __name__ == '__main__':
+    # Create necessary directories
+    os.makedirs('data/uploads', exist_ok=True)
+    os.makedirs('data/results', exist_ok=True)
+    os.makedirs('CCTVS', exist_ok=True)
+    
+    # Run the app
+    uvicorn.run(
+        'src.backend.app:app',
+        host=HOST,
+        port=PORT,
+        reload=False  # Disable reload in production
+    )
