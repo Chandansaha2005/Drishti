@@ -295,7 +295,13 @@ except Exception as e:
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize on startup"""
+    """Initialize on startup - Create required directories"""
+    # Create necessary directories
+    Settings.UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    Settings.RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    Settings.VIDEO_DIR.mkdir(parents=True, exist_ok=True)
+    Settings.LOG_DIR.mkdir(parents=True, exist_ok=True)
+    
     logger.info("=" * 70)
     logger.info("DRISTI - Lost Person Detection System v2.0")
     logger.info("=" * 70)

@@ -173,6 +173,7 @@ class SearchService:
     ) -> Dict[str, Any]:
         """
         Search for lost person in video files.
+        Returns results in memory - disk writes are optional and non-blocking.
         
         Args:
             lost_person_path: Path to the lost person's photo
@@ -180,10 +181,8 @@ class SearchService:
             search_id: Unique search identifier
             
         Returns:
-            Dictionary containing search results and matches
+            Dictionary containing search results and matches (never depends on disk reads)
         """
-        Settings.RESULTS_DIR.mkdir(exist_ok=True)
-        
         logger.info(f"Starting search {search_id} for {len(video_paths)} videos")
         
         try:
@@ -191,20 +190,32 @@ class SearchService:
             lost_person_image = cv2.imread(lost_person_path)
             if lost_person_image is None:
                 logger.error(f"Could not read lost person image: {lost_person_path}")
-                return {"error": "Could not read uploaded image"}
+                return {
+                    "search_id": search_id,
+                    "status": "error",
+                    "error": "Could not read uploaded image",
+                    "matches": [],
+                    "stats": {"matches_found": 0}
+                }
             
             # Detect face in lost person photo
             lost_person_faces = self.detect_faces_in_frame(lost_person_image)
             
             if not lost_person_faces:
                 logger.warning("No face detected in lost person photo")
-                return {"error": "No face detected in the uploaded photo"}
+                return {
+                    "search_id": search_id,
+                    "status": "error",
+                    "error": "No face detected in the uploaded photo",
+                    "matches": [],
+                    "stats": {"matches_found": 0}
+                }
             
             # Use the first (largest) face
             lost_person_embedding = self.extract_face_embedding(lost_person_faces[0]['face'])
             logger.info("Lost person face embedding extracted")
             
-            # Search results
+            # Search results - stored in memory
             matches = []
             search_stats = {
                 "total_videos": len(video_paths),
@@ -257,15 +268,8 @@ class SearchService:
                         if similarity >= self.similarity_threshold:
                             timestamp = (frame_idx / fps) if fps > 0 else 0
                             
-                            # Save snapshot
+                            # Create match record (in memory)
                             snapshot_name = f"{search_id}_{video_path.stem}_{frame_count}.jpg"
-                            snapshot_path = Settings.RESULTS_DIR / snapshot_name
-                            
-                            # Draw box and save
-                            frame_copy = frame.copy()
-                            x1, y1, x2, y2 = face_data['bbox']
-                            cv2.rectangle(frame_copy, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                            cv2.imwrite(str(snapshot_path), frame_copy)
                             
                             match = {
                                 "camera": video_path.stem,
@@ -284,6 +288,9 @@ class SearchService:
                                 f"Match found: {match['camera']} at {match['time_formatted']} "
                                 f"(confidence: {match['confidence']}%)"
                             )
+                            
+                            # Try to save snapshot (non-blocking, optional)
+                            self._save_snapshot_async(frame, face_data, snapshot_name)
                 
                 cap.release()
                 search_stats["videos_processed"] += 1
@@ -293,7 +300,7 @@ class SearchService:
             # Sort matches by confidence (descending)
             matches.sort(key=lambda x: x['confidence'], reverse=True)
             
-            # Prepare final results
+            # Prepare final results - stored in memory
             final_results = {
                 "search_id": search_id,
                 "timestamp": datetime.now().isoformat(),
@@ -303,14 +310,12 @@ class SearchService:
                 "summary": {
                     "total_matches": len(matches),
                     "best_match_confidence": matches[0]['confidence'] if matches else 0,
-                    "cameras_with_matches": len(set(m['camera'] for m in matches))
+                    "cameras_with_matches": len(set(m['camera'] for m in matches)) if matches else 0
                 }
             }
             
-            # Save results to file
-            results_file = Settings.RESULTS_DIR / f"{search_id}.json"
-            with open(results_file, "w") as f:
-                json.dump(final_results, f, indent=2)
+            # Try to save results to file (non-blocking, optional)
+            self._save_results_async(final_results)
             
             logger.info(f"Search {search_id} completed. Found {len(matches)} matches.")
             
@@ -318,18 +323,48 @@ class SearchService:
             
         except Exception as e:
             logger.error(f"Error during search: {str(e)}", exc_info=True)
-            error_result = {
+            return {
                 "search_id": search_id,
                 "status": "error",
-                "error": str(e)
+                "error": str(e),
+                "matches": [],
+                "stats": {"matches_found": 0}
             }
             
-            # Save error result
-            results_file = Settings.RESULTS_DIR / f"{search_id}.json"
-            with open(results_file, "w") as f:
-                json.dump(error_result, f)
-            
             return error_result
+    
+    def _save_snapshot_async(self, frame: np.ndarray, face_data: Dict[str, Any], snapshot_name: str) -> None:
+        """
+        Try to save snapshot asynchronously (non-blocking).
+        Failures are logged but do not affect search results.
+        """
+        try:
+            snapshot_path = Settings.RESULTS_DIR / snapshot_name
+            
+            # Draw box on frame
+            frame_copy = frame.copy()
+            x1, y1, x2, y2 = face_data['bbox']
+            cv2.rectangle(frame_copy, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            
+            # Save image
+            success = cv2.imwrite(str(snapshot_path), frame_copy)
+            if not success:
+                logger.warning(f"Failed to save snapshot: {snapshot_path}")
+        except Exception as e:
+            logger.warning(f"Error saving snapshot {snapshot_name}: {e}")
+    
+    def _save_results_async(self, results: Dict[str, Any]) -> None:
+        """
+        Try to save results to JSON file asynchronously (non-blocking).
+        Failures are logged but do not affect the API response.
+        """
+        try:
+            results_file = Settings.RESULTS_DIR / f"{results.get('search_id', 'unknown')}.json"
+            with open(results_file, "w") as f:
+                json.dump(results, f, indent=2)
+            logger.info(f"Saved results to {results_file}")
+        except Exception as e:
+            logger.warning(f"Failed to save results to disk: {e}")
     
     @staticmethod
     def _format_time(seconds: float) -> str:
