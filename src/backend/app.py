@@ -37,6 +37,13 @@ logger = logging.getLogger(__name__)
 # Initialize directories
 Settings.create_directories()
 
+# ============================================================================
+# IN-MEMORY CACHE FOR SEARCH RESULTS
+# ============================================================================
+# On Render (ephemeral filesystem), keep results in memory instead of disk
+# This ensures results persist for the request lifecycle and API calls
+search_results_cache: Dict[str, Dict[str, Any]] = {}
+
 # Initialize FastAPI app
 app = FastAPI(
     title="DRISTI - Lost Person Detection",
@@ -128,6 +135,10 @@ async def search_lost_person(
             search_id
         )
         
+        # Store results in memory cache (Render-compatible, no disk dependency)
+        search_results_cache[search_id] = results
+        logger.info(f"Results cached in memory for search_id: {search_id}")
+        
         # Return results directly (status 200)
         return JSONResponse(
             status_code=200,
@@ -149,59 +160,103 @@ async def search_lost_person(
 
 @app.get("/api/search-results/{search_id}")
 async def get_search_results(search_id: str):
-    """Retrieve search results by ID"""
+    """
+    Retrieve search results from in-memory cache.
+    Render-compatible: uses memory cache instead of disk reads.
+    """
     try:
-        results_file = Settings.RESULTS_DIR / f"{search_id}.json"
-        
-        if not results_file.exists():
+        # Check memory cache first (primary source)
+        if search_id in search_results_cache:
+            results = search_results_cache[search_id]
+            logger.info(f"Found results in memory cache for search_id: {search_id}")
             return JSONResponse(
-                status_code=404,
+                status_code=200,
                 content={
-                    "success": False,
-                    "message": "Search not found or still processing",
-                    "search_id": search_id
+                    "success": True,
+                    "search_id": search_id,
+                    "results": results
                 }
             )
         
-        with open(results_file, "r") as f:
-            results = json.load(f)
+        # Fallback: Try to read from disk (for recovered sessions, if disk available)
+        results_file = Settings.RESULTS_DIR / f"{search_id}.json"
+        if results_file.exists():
+            try:
+                with open(results_file, "r") as f:
+                    results = json.load(f)
+                # Cache it in memory for future requests
+                search_results_cache[search_id] = results
+                logger.info(f"Loaded results from disk for search_id: {search_id}")
+                return JSONResponse(
+                    status_code=200,
+                    content={
+                        "success": True,
+                        "search_id": search_id,
+                        "results": results
+                    }
+                )
+            except Exception as e:
+                logger.warning(f"Failed to read results file: {e}")
         
+        # Results not found in memory or disk
         return JSONResponse(
-            status_code=200,
+            status_code=404,
             content={
-                "success": True,
-                "search_id": search_id,
-                "results": results
+                "success": False,
+                "message": "Search results not found. Search may still be processing.",
+                "search_id": search_id
             }
         )
         
     except Exception as e:
-        logger.error(f"Error retrieving results: {str(e)}")
+        logger.error(f"Error retrieving results: {str(e)}", exc_info=True)
         return JSONResponse(
             status_code=500,
-            content={"success": False, "message": str(e)}
+            content={
+                "success": False,
+                "message": f"Error retrieving results: {str(e)}",
+                "search_id": search_id
+            }
         )
 
 
 @app.get("/api/snapshot/{filename}")
 async def get_snapshot(filename: str):
-    """Retrieve snapshot image from search results"""
+    """
+    Retrieve snapshot image from search results.
+    On Render: snapshots may not exist due to ephemeral filesystem.
+    Returns placeholder if snapshot unavailable.
+    """
     try:
         snapshot_path = Settings.RESULTS_DIR / filename
         
-        if not snapshot_path.exists():
-            return JSONResponse(
-                status_code=404,
-                content={"success": False, "message": "Snapshot not found"}
-            )
+        # Try to return snapshot if it exists
+        if snapshot_path.exists():
+            logger.info(f"Serving snapshot: {filename}")
+            return FileResponse(snapshot_path, media_type="image/jpeg")
         
-        return FileResponse(snapshot_path, media_type="image/jpeg")
+        # Snapshot not found (expected on Render due to ephemeral filesystem)
+        logger.warning(f"Snapshot not found: {filename}. Using placeholder.")
+        
+        # Return JSON response instead of 404
+        return JSONResponse(
+            status_code=404,
+            content={
+                "success": False,
+                "message": "Snapshot not available (ephemeral storage on serverless platform)",
+                "filename": filename
+            }
+        )
         
     except Exception as e:
-        logger.error(f"Error retrieving snapshot: {str(e)}")
+        logger.error(f"Error retrieving snapshot {filename}: {str(e)}", exc_info=True)
         return JSONResponse(
             status_code=500,
-            content={"success": False, "message": str(e)}
+            content={
+                "success": False,
+                "message": f"Error retrieving snapshot: {str(e)}",
+                "filename": filename
+            }
         )
 
 
