@@ -135,18 +135,9 @@ async def search_lost_person(
             search_id
         )
         
-        # Store results in memory cache (Render-compatible)
+        # Store results in memory cache (Render-compatible, no disk dependency)
         search_results_cache[search_id] = results
         logger.info(f"Results cached in memory for search_id: {search_id}")
-        
-        # Save to Firebase (async, non-blocking)
-        if Settings.USE_FIREBASE:
-            try:
-                from src.backend.firebase_storage import FirebaseStorage
-                firebase_result = await FirebaseStorage.save_search_results(results, search_id)
-                logger.info(f"Results saved to Firebase: {firebase_result}")
-            except Exception as e:
-                logger.warning(f"Failed to save to Firebase: {e}. Using memory cache only.")
         
         # Return results directly (status 200)
         return JSONResponse(
@@ -258,97 +249,6 @@ async def get_snapshot(filename: str):
         )
         
     except Exception as e:
-        logger.error(f"Error retrieving snapshot {filename}: {str(e)}", exc_info=True)
-        return JSONResponse(
-            status_code=500,
-            content={
-                "success": False,
-                "message": f"Error retrieving snapshot: {str(e)}",
-                "filename": filename
-            }
-        )
-
-
-# ============================================================================
-# FIREBASE ENDPOINTS
-# ============================================================================
-
-@app.get("/api/firebase/results/{search_id}")
-async def get_firebase_results(search_id: str):
-    """Retrieve search results from Firebase"""
-    try:
-        from src.backend.firebase_storage import FirebaseStorage
-        
-        result = await FirebaseStorage.get_search_results(search_id)
-        
-        if not result.get("success"):
-            return JSONResponse(
-                status_code=404,
-                content=result
-            )
-        
-        return JSONResponse(
-            status_code=200,
-            content=result
-        )
-    except Exception as e:
-        logger.error(f"Error retrieving Firebase results: {e}")
-        return JSONResponse(
-            status_code=500,
-            content={
-                "success": False,
-                "message": f"Error retrieving results: {str(e)}"
-            }
-        )
-
-@app.get("/api/firebase/all-searches")
-async def get_all_firebase_searches():
-    """Get all searches from Firebase"""
-    try:
-        from src.backend.firebase_storage import FirebaseStorage
-        
-        result = await FirebaseStorage.get_all_searches()
-        
-        return JSONResponse(
-            status_code=200,
-            content=result
-        )
-    except Exception as e:
-        logger.error(f"Error retrieving all searches: {e}")
-        return JSONResponse(
-            status_code=500,
-            content={
-                "success": False,
-                "message": f"Error retrieving searches: {str(e)}",
-                "results": []
-            }
-        )
-
-@app.delete("/api/firebase/delete/{search_id}")
-async def delete_firebase_results(search_id: str):
-    """Delete search results from Firebase"""
-    try:
-        from src.backend.firebase_storage import FirebaseStorage
-        
-        success = await FirebaseStorage.delete_search_results(search_id)
-        
-        return JSONResponse(
-            status_code=200,
-            content={
-                "success": success,
-                "message": f"Search results deleted: {search_id}" if success else "Failed to delete"
-            }
-        )
-    except Exception as e:
-        logger.error(f"Error deleting Firebase results: {e}")
-        return JSONResponse(
-            status_code=500,
-            content={
-                "success": False,
-                "message": f"Error deleting results: {str(e)}"
-            }
-        )
-
         logger.error(f"Error retrieving snapshot {filename}: {str(e)}", exc_info=True)
         return JSONResponse(
             status_code=500,

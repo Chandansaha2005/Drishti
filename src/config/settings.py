@@ -58,13 +58,6 @@ class Settings:
     ALGORITHM = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES = 30
     
-    # ========================================================================
-    # FIREBASE CONFIGURATION
-    # ========================================================================
-    FIREBASE_CREDENTIALS_PATH = os.getenv("FIREBASE_CREDENTIALS_PATH", "")
-    FIREBASE_PROJECT_ID = os.getenv("FIREBASE_PROJECT_ID", "")
-    USE_FIREBASE = os.getenv("USE_FIREBASE", "True").lower() == "true"
-    
     @staticmethod
     def create_directories():
         """Create all necessary directories."""
