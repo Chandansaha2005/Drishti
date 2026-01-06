@@ -27,16 +27,29 @@ class FirebaseStorage:
             return
         
         try:
-            # Try to initialize with credentials file
-            creds_path = os.getenv("FIREBASE_CREDENTIALS_PATH")
-            if creds_path and Path(creds_path).exists():
-                cred = credentials.Certificate(creds_path)
-                firebase_admin.initialize_app(cred)
-                logger.info("Firebase initialized with credentials file")
+            # Method 1: Try credentials from environment variable (JSON string)
+            creds_json = os.getenv("FIREBASE_CREDENTIALS_JSON")
+            if creds_json:
+                try:
+                    creds_dict = json.loads(creds_json)
+                    cred = credentials.Certificate(creds_dict)
+                    firebase_admin.initialize_app(cred)
+                    logger.info("Firebase initialized with FIREBASE_CREDENTIALS_JSON env var")
+                except json.JSONDecodeError as je:
+                    logger.warning(f"Invalid JSON in FIREBASE_CREDENTIALS_JSON: {je}")
+                    raise
+            
+            # Method 2: Try to initialize with credentials file
             else:
-                # Try to initialize with environment variables
-                firebase_admin.initialize_app()
-                logger.info("Firebase initialized with default credentials")
+                creds_path = os.getenv("FIREBASE_CREDENTIALS_PATH")
+                if creds_path and Path(creds_path).exists():
+                    cred = credentials.Certificate(creds_path)
+                    firebase_admin.initialize_app(cred)
+                    logger.info("Firebase initialized with credentials file")
+                else:
+                    # Method 3: Try default credentials
+                    firebase_admin.initialize_app()
+                    logger.info("Firebase initialized with default credentials")
             
             cls._db = firestore.client()
             cls._bucket = storage.bucket()
