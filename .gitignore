@@ -114,6 +114,7 @@ desktop.ini
 *.pem
 *.key
 cctv_config.json
+./firebase-credentials.json
 
 # IDE specific
 .vscode/settings.json
