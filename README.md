@@ -12,6 +12,10 @@ A comprehensive face recognition system that identifies lost persons in CCTV foo
 - 🎬 **Snapshot Capture** - Save matched faces for verification
 - 🌐 **Web Interface** - Intuitive UI for searching lost persons
 
+## System Architecture
+
+![Architecture Diagram](docs/arch.png)
+
 ## Project Structure
 ```
 DRISTI/
