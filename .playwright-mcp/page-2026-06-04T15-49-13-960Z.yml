@@ -1,0 +1,43 @@
+- main [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - img "Drishti logo" [ref=e6]
+        - generic [ref=e7]: Drishti
+      - button "Connect CCTV" [ref=e8] [cursor=pointer]
+    - generic [ref=e9]: CCTV FEEDS
+    - generic [ref=e10]:
+      - article [ref=e11]:
+        - img "Match snapshot" [ref=e13]
+        - generic:
+          - generic:
+            - generic: CCTV 1
+            - generic: LIVE
+      - article [ref=e14]:
+        - img "Match snapshot" [ref=e16]
+        - generic:
+          - generic:
+            - generic: CCTV 2
+            - generic: LIVE
+      - article [ref=e17]:
+        - img "Match snapshot" [ref=e19]
+        - generic:
+          - generic:
+            - generic: CCTV 3
+            - generic: LIVE
+      - article [ref=e20]:
+        - img "Match snapshot" [ref=e22]
+        - generic:
+          - generic:
+            - generic: CCTV 4
+            - generic: LIVE
+  - complementary [ref=e23]:
+    - generic [ref=e24]:
+      - heading "Find Your Lost Person" [level=1] [ref=e25]
+      - paragraph [ref=e27]: Upload a clear face image to scan CCTV feeds.
+    - generic [ref=e29] [cursor=pointer]:
+      - generic [ref=e31]: 
+      - generic [ref=e32]: Drop image here
+      - generic [ref=e33]: or click to upload
+      - generic [ref=e34]: JPG, PNG, WEBP
+    - button "Find Person" [ref=e35] [cursor=pointer]

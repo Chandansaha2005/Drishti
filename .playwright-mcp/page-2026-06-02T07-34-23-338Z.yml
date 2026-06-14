@@ -1,0 +1,14 @@
+- main [ref=e2]:
+  - generic [ref=e4]:
+    - generic [ref=e5]: CCTV FEEDS
+    - button "Connect CCTV" [ref=e6] [cursor=pointer]
+  - complementary [ref=e8]:
+    - generic [ref=e9]:
+      - heading "Find Your Lost Person" [level=1] [ref=e10]
+      - paragraph [ref=e12]: Upload a clear face image to scan CCTV feeds.
+    - generic [ref=e14] [cursor=pointer]:
+      - generic [ref=e16]: 
+      - generic [ref=e17]: Drop image here
+      - generic [ref=e18]: or click to upload
+      - generic [ref=e19]: JPG, PNG, WEBP
+    - button "Find Person" [ref=e20] [cursor=pointer]

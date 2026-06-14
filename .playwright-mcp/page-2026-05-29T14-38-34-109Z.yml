@@ -1,0 +1,40 @@
+- main [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]: CCTV FEEDS
+      - button "Connect CCTV" [ref=e6] [cursor=pointer]
+    - generic [ref=e7]:
+      - article [ref=e8]:
+        - img "Match snapshot"
+        - generic:
+          - generic:
+            - generic: CAM 01
+            - generic: LIVE
+      - article [ref=e9]:
+        - img "Match snapshot"
+        - generic:
+          - generic:
+            - generic: CAM 02
+            - generic: LIVE
+      - article [ref=e10]:
+        - img "Match snapshot"
+        - generic:
+          - generic:
+            - generic: CAM 03
+            - generic: LIVE
+      - article [ref=e11]:
+        - img "Match snapshot"
+        - generic:
+          - generic:
+            - generic: CAM 04
+            - generic: LIVE
+  - complementary [ref=e12]:
+    - generic [ref=e13]:
+      - heading "Find Your Lost Person" [level=1] [ref=e14]
+      - paragraph [ref=e16]: Upload a clear face image to scan CCTV feeds.
+    - generic [ref=e18] [cursor=pointer]:
+      - generic [ref=e20]: 
+      - generic [ref=e21]: Drop image here
+      - generic [ref=e22]: or click to upload
+      - generic [ref=e23]: JPG, PNG, WEBP
+    - button "Find Person" [ref=e24] [cursor=pointer]
