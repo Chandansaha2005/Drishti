@@ -358,4 +358,4 @@ Built with:
 
 ---
 
-**Made By**: Subhojyoti Maity & Chandan Saha
+**Made By**: Chandan Saha
